@@ -1,49 +1,16 @@
-# Predictive Policing in England and Wales: Forecasting Police Demand for Patrol Allocation
+# Predictive Policing in England and Wales: Forecasting Police Demand and Efficient Patrol Allocation
 
-## Overview
+## Project Overview
 
-This repository contains the implementation of a predictive policing framework designed to forecast crime demand and to allocate efficiently police patrols across England and Wales.
+This repository contains the implementation of a predictive policing framework designed to forecast crime demand and support police patrol allocation across England and Wales.
 
-The framework predicts monthly crime demand at Lower Layer Super Output Area (LSOA) level using a HistGradientBoostingRegressor model. Predicted demand is then used to allocate patrol resources using weighted K-Medoids clustering and spatial patrol area generation.
+The project uses historical police-recorded crime data to predict monthly crime demand at Lower Layer Super Output Area (LSOA) level for the year 2027. Predicted demand is then used to identify crime hotspots and allocate patrol resources using spatial clustering techniques.
 
-## Data
+---
 
-The model uses:
+## Scope of This Repository
 
-* `street.parquet` – historical street-level crime data obtained from police.uk.
-* `LSOA_2021_EW_BSC.geojson` – LSOA boundary dataset used for spatial visualisation.
-
-The file `street.parquet` is not included in this repository because of its size (5.7 GB).
-
-Place the required files in:
-
-```text
-data/street.parquet
-data/LSOA_2021_EW_BSC.geojson
-```
-
-before running the notebook.
-
-## Methodology
-
-The workflow consists of:
-
-1. Crime data loading and preprocessing.
-2. Crime type grouping.
-3. Monthly LSOA demand aggregation.
-4. Feature engineering.
-5. HistGradientBoostingRegressor training.
-6. Model evaluation using MAE, RMSE and R².
-7. Crime demand forecasting for 2027.
-8. Hotspot identification.
-9. Patrol resource matching.
-10. Weighted K-Medoids patrol allocation.
-11. Patrol area visualisation.
-12. Interactive map generation.
-
-## Crime Groups
-
-### Police Officer Group
+This notebook contains the implementation for the **Police Officer crime group**, which includes:
 
 * Vehicle Crime
 * Other Theft
@@ -53,56 +20,209 @@ The workflow consists of:
 * Burglary
 * Violence and Sexual Offences
 
-### PCSO and Police Officer Group
+These crime types are aggregated into a single demand measure that is predicted and used for patrol allocation.
 
-* Anti-Social Behaviour
-* Shoplifting
-* Bicycle Theft
-* Theft from the Person
-* Criminal Damage and Arson
+---
 
-## Model Performance
+## Data
 
-### Crime Group 1
+The project requires the following datasets:
 
-* MAE: 2.58
-* RMSE: 3.847
-* R²: 0.866
+### Crime Dataset
 
-### Crime Group 2
+* `street.parquet`
 
-* MAE: 1.893
-* RMSE: 3.464
-* R²: 0.870
+This file contains historical street-level crime data for England and Wales obtained from the UK Police open data platform.
 
-These results indicate that the model explains approximately 87% of the variation in crime demand.
+The file is **not included in this repository** because its size is **5.7 GB**.
 
-## Running the Project
+### Boundary Dataset
 
-Install dependencies:
+* `LSOA_2021_EW_BSC.geojson`
+
+This file contains the geographic boundaries of LSOAs and is used for spatial visualisation and patrol area generation.
+
+Place the files in:
+
+```text
+data/street.parquet
+data/LSOA_2021_EW_BSC.geojson
+```
+
+before running the notebook.
+
+---
+
+## Methodology
+
+The framework consists of several stages:
+
+### 1. Data Loading and Preprocessing
+
+Historical crime records are loaded and filtered to retain only the crime types assigned to the Police Officer group.
+
+### 2. Monthly Demand Aggregation
+
+Crime records are aggregated by:
+
+* Month
+* LSOA
+
+This produces a monthly crime demand count for each LSOA.
+
+### 3. Feature Engineering
+
+Several predictive features are created, including:
+
+* Month and year variables
+* Lagged demand values
+* Rolling averages
+* Rolling standard deviations
+* Long-term demand averages
+* Spatial coordinates
+
+These features provide information about temporal trends and historical crime behaviour.
+
+### 4. Crime Demand Forecasting
+
+A **HistGradientBoostingRegressor** model is trained to predict future crime demand.
+
+The model was selected because it:
+
+* Handles large tabular datasets efficiently
+* Captures non-linear relationships
+* Provides strong predictive performance
+* Is computationally efficient for large-scale forecasting
+
+### 5. Hotspot Identification
+
+For each forecast month in 2027:
+
+* LSOAs are ranked by predicted demand
+* The top 30% highest-demand locations are selected
+* Only locations with predicted demand greater than zero are retained
+
+These locations are treated as predicted crime hotspots.
+
+### 6. Patrol Type Classification using DBSCAN
+
+DBSCAN is used to distinguish between:
+
+* Dense hotspot clusters
+* Isolated hotspot locations
+
+Dense hotspot areas are considered more suitable for **bike patrols** because travel distances are shorter.
+
+More isolated hotspot areas are assigned to **car patrols** because they require faster travel across larger distances.
+
+### 7. Weighted K-Medoids Patrol Allocation
+
+After patrol type classification, weighted K-Medoids is used to allocate patrol centres.
+
+Unlike K-Means, K-Medoids selects **real hotspot locations** as patrol centres instead of creating artificial average coordinates.
+
+Predicted crime demand is used as a weight, ensuring that high-demand areas have greater influence on patrol centre placement.
+
+### 8. Spatial Visualisation
+
+The final patrol allocation is visualised using:
+
+* LSOA boundaries
+* Patrol centre markers
+* Interactive Folium maps
+
+These maps allow users to explore monthly allocation results across England and Wales.
+
+---
+
+## Model Evaluation
+
+The forecasting model is evaluated using:
+
+### Mean Absolute Error (MAE)
+
+Measures the average prediction error.
+
+### Root Mean Squared Error (RMSE)
+
+Measures prediction error while giving greater importance to larger mistakes.
+
+### Coefficient of Determination (R²)
+
+Measures how much variation in crime demand is explained by the model.
+
+### Results
+
+#### Police Officer Crime Group
+
+| Metric | Value |
+| ------ | ----- |
+| MAE    | 2.58  |
+| RMSE   | 3.847 |
+| R²     | 0.866 |
+
+An R² value of 0.866 indicates that approximately 86.6% of the variation in crime demand is explained by the model.
+
+---
+
+## Repository Structure
+
+```text
+predictive-policing-patrol-allocation/
+│
+├── README.md
+├── requirements.txt
+├── prediction_and_allocation_2027.ipynb
+│
+├── data/
+│   ├── README.md
+│   └── LSOA_2021_EW_BSC.geojson
+│
+└── outputs/
+    └── README.md
+```
+
+---
+
+## Installation
+
+Install the required Python packages:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Open:
+---
+
+## Running the Notebook
+
+1. Place the required datasets inside the `data` folder.
+2. Open the notebook:
 
 ```bash
-jupyter notebook pred_2027.ipynb
+jupyter notebook prediction_and_allocation_2027.ipynb
 ```
 
-Run all notebook cells from top to bottom.
+3. Run all notebook cells from top to bottom.
+
+---
 
 ## Outputs
 
 The notebook generates:
 
-* Crime demand forecasts
+* Forecasted crime demand datasets
 * Hotspot datasets
-* Interactive hotspot map
 * Patrol allocation datasets
-* Interactive allocation map
+* Interactive HTML hotspot maps
+* Interactive HTML patrol allocation maps
+
+Output files are stored in the `outputs` folder.
+
+---
 
 ## Reproducibility
 
-All preprocessing, modelling, evaluation, forecasting, hotspot selection, patrol allocation and visualisation steps are fully documented in the notebook.
+All preprocessing, feature engineering, model training, evaluation, forecasting, hotspot selection, DBSCAN patrol classification, weighted K-Medoids allocation, and visualisation steps are documented within the notebook.
+
+Running the notebook with the required input files reproduces the complete workflow described in the accompanying report.
