@@ -175,11 +175,10 @@ predictive-policing-patrol-allocation/
 ├── prediction_and_allocation_2027.ipynb
 │
 ├── data/
-│   ├── README.md
 │   └── LSOA_2021_EW_BSC.geojson
 │
 └── outputs/
-    └── README.md
+    └── .gitkeep
 ```
 
 ---
