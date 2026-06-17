@@ -36,6 +36,8 @@ This file contains historical street-level crime data for England and Wales obta
 
 The file is **not included in this repository** because its size is **5.7 GB**.
 
+The file can be downloaded from the following OneDrive link: https://tuenl-my.sharepoint.com/:u:/g/personal/m_beloperkin_student_tue_nl/IQBfyqiWLDgxRa-J6hNC6m0wAUYN8s7iLxfWFIQ_IExngOo?e=C0asWJ
+
 ### Boundary Dataset
 
 * `LSOA_2021_EW_BSC.geojson`
